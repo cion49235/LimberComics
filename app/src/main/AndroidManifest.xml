@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="co.cartoon.fun.comics">
+
+
+    <!-- Permission -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="com.android.vending.BILLING" />
+
+    <!-- Application -->
+    <application android:label="@string/app_name"
+                 android:icon="@mipmap/ic_launcher"
+                 android:allowBackup="true"
+                 android:enabled="true"
+                 android:largeHeap="true"
+                 android:supportsRtl="false"
+                 android:fullBackupContent="@xml/backup_descriptor">
+
+        <activity
+            android:screenOrientation="sensorPortrait"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
+            android:name="co.cartoon.fun.comics.Activity.IntroActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:screenOrientation="sensorPortrait"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
+            android:name="co.cartoon.fun.comics.Activity.FakeActivity"
+            android:label="@string/app_name" >
+        </activity>
+
+        <!-- Holder -->
+        <activity android:name="co.cartoon.fun.comics.Activity.HolderActivity"
+                  android:label="@string/app_name"
+                  android:launchMode="singleTask"
+                  android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <!--<category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />-->
+            </intent-filter>
+        </activity>
+
+        <service android:name="co.cartoon.fun.comics.Service.HolderService"
+                 android:label="@string/app_name"
+                 android:icon="@mipmap/ic_launcher"/>
+        <!-- BrowserActivity -->
+        <activity
+            android:screenOrientation="sensorPortrait"
+            android:name="co.cartoon.fun.comics.Activity.BrowserActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleInstance"
+            android:configChanges="keyboardHidden|orientation"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
+            android:theme="@style/AppTheme">
+
+            <intent-filter
+                android:icon="@mipmap/ic_launcher" >
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.WEB_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="sc_startPage" />
+                <action android:name="sc_login" />
+                <action android:name="sc_bookmark" />
+                <action android:name="sc_history" />
+            </intent-filter>
+            <meta-data android:name="android.app.searchable"
+                       android:resource="@xml/searchable"/>
+            <meta-data android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+
+        <meta-data
+            android:name="igaworks_app_key"
+            android:value="242346785" />
+
+        <meta-data
+            android:name="igaworks_hash_key"
+            android:value="ee566b148b2d4513" />
+
+
+        <!-- Settings -->
+        <activity android:name="co.cartoon.fun.comics.Activity.Settings_Activity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden"
+            android:label="@string/setting_label"
+            android:theme="@style/AppTheme"/>
+
+        <activity android:name="co.cartoon.fun.comics.Activity.Whitelist_AdBlock"
+            android:label="@string/setting_title_whitelist"
+            android:theme="@style/AppTheme"/>
+
+        <activity android:name="co.cartoon.fun.comics.Activity.Whitelist_Javascript"
+            android:label="@string/setting_title_whitelistJS"
+            android:theme="@style/AppTheme"/>
+
+        <activity android:name="co.cartoon.fun.comics.Activity.Whitelist_Cookie"
+            android:label="@string/setting_title_whitelistCookie"
+            android:theme="@style/AppTheme"/>
+
+        <activity android:name="co.cartoon.fun.comics.Activity.Settings_ClearActivity"
+            android:label="@string/setting_title_clear_control"
+            android:theme="@style/AppTheme"/>
+
+        <activity android:name="co.cartoon.fun.comics.Activity.Settings_StartActivity"
+            android:label="@string/setting_title_start_control"
+            android:theme="@style/AppTheme"/>
+
+        <activity android:name="co.cartoon.fun.comics.Activity.Settings_DataActivity"
+            android:label="@string/setting_title_data"
+            android:theme="@style/AppTheme"/>
+
+
+        <activity android:name="co.cartoon.fun.comics.Activity.Settings_UIActivity"
+            android:label="@string/setting_title_ui"
+            android:theme="@style/AppTheme"/>
+
+        <!-- ClearService | Provider-->
+        <service android:name="co.cartoon.fun.comics.Service.ClearService"
+                 android:label="@string/app_name"
+                 android:icon="@mipmap/ic_launcher"/>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="co.cartoon.fun.comics.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
+
+        <service android:name="co.cartoon.fun.comics.Service.MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <service android:name="co.cartoon.fun.comics.Service.MyFirebaseInstanceIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name="co.cartoon.fun.comics.receiver.InstallReferrerReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

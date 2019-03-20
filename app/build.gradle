@@ -1,0 +1,51 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
+
+    defaultConfig {
+        applicationId "co.cartoon.fun.comics"
+        minSdkVersion 21
+        targetSdkVersion 27
+        versionCode 2
+        versionName "1.0.2"
+        multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        disable 'MissingTranslation'
+    }
+    return void
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:27.1.1'
+    compile 'com.android.support:appcompat-v7:27.1.1'
+    compile 'com.android.support:design:27.1.1'
+    compile 'com.android.support:cardview-v7:27.1.1'
+    compile 'com.mobapphome.library:mah-encryptor-lib:1.0.1'
+    compile 'com.anjlab.android.iab.v3:library:1.0.44'
+    implementation files('libs/IgawAdbrix_v4.4.6a.jar')
+    implementation files('libs/IgawCommon_v4.4.7.jar')
+    implementation files('libs/libNswitchSDK_v1.1.2.jar')
+    compile 'com.google.firebase:firebase-auth:10.2.1'
+    compile 'com.google.firebase:firebase-messaging:10.2.1'
+    compile 'com.google.android.gms:play-services-ads:10.2.1'
+    compile 'com.google.android.gms:play-services-auth:10.2.1'
+    compile 'com.google.firebase:firebase-core:10.2.1'
+    compile 'com.google.android.gms:play-services-analytics:10.2.1'
+    compile 'com.loopj.android:android-async-http:1.4.9'
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'jp.wasabeef:glide-transformations:2.0.1'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+}
+apply plugin: 'com.google.gms.google-services'

@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "177084505679",
+    "firebase_url": "https://toonfan-c5fa8.firebaseio.com",
+    "project_id": "toonfan-c5fa8",
+    "storage_bucket": "toonfan-c5fa8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177084505679:android:113dc092f91d2753",
+        "android_client_info": {
+          "package_name": "co.cartoon.fun.comics"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "177084505679-4f4pqpttlrbeh3lap692mbi6n65r1jcv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJ-3GhVxjexCEHwrrromsLFG6fWSJQa08"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
