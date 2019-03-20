@@ -694,8 +694,8 @@ public class BrowserActivity extends Activity implements BrowserController, View
                     ninjaWebView.addJavascriptInterface(this, "android_wowcomics");
                     String userAgent = ninjaWebView.getSettings().getUserAgentString();
                     ninjaWebView.getSettings().setUserAgentString(userAgent+" app");
-                    ninjaWebView.loadUrl("http://119.207.78.175:8080?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, orderId) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + SUBSCRIPTION_TYPE);
-                    Log.i("dsu", "구독완료후 URL이동===>"+ "http://119.207.78.175:8080?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, orderId) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + SUBSCRIPTION_TYPE);
+                    ninjaWebView.loadUrl("http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, orderId) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + SUBSCRIPTION_TYPE);
+                    Log.i("dsu", "구독완료후 URL이동===>"+ "http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, orderId) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + SUBSCRIPTION_TYPE);
                 }
                 catch (JSONException e) {
                     alert("Failed to parse purchase data.");
