@@ -12,10 +12,12 @@ import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -32,6 +34,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
@@ -74,8 +77,10 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.android.vending.billing.IInAppBillingService;
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -330,6 +335,7 @@ public class BrowserActivity extends Activity implements BrowserController, View
         super.onCreate(savedInstanceState);
         context = this;
         alert_view = true;
+        bind_service();
         billing_process();
         WebView.enableSlowWholeDocumentDraw();
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
@@ -561,25 +567,27 @@ public class BrowserActivity extends Activity implements BrowserController, View
     }
 
 
-    private String order_id = "";
-    public String SUBSCRIPTION19_ID = "fun.comics.coin199.subscribe";
-    private String SUBSCRIPTION_TYPE;
-    public static BillingProcessor bp2;
+    private String inapp_id = "";
+    private String order_number = "";
+    public String SUBSCRIPTION19_ID_NOTINDIA = "fun.comics.coin199.subscribe";
+    public String SUBSCRIPTION19_ID = "fun.comics.coin199.subscribe2";
+    private String SUBSCRIPTION_ID;
+    public static BillingProcessor  bp;
     public static final String LICENSE_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkO0ZH5UJ7qjr1m8yUBq42q8v2M/27PKgdTg8X439XY9AMddmAi36rR4profJTY042Eh2cg4XKRxob0l/ogpC2ZCreGfLiqnBrwp6MIj2+nIU/1exrK0+wXjPbLlxNuZB94OPWfVo2rlz0nMdBUivpLuHYnTbnlM7qo3eaudZq25zozDWrUNShCryrjUbzneT0m8rabPMc74No0RPapozsuxSq+kRO3asR6ddeJPoGb7UCPFwCBls3FJXAveM43SBvAPKT77IDWzcvNlwcypNaX1hAGhXhtUgKArJqNlCHTRnNc0wlGbd9PfeoYIq4jULZDQdDGz5rNFCYCylMKtSJwIDAQAB";
     public void billing_process(){
         if(!BillingProcessor.isIabServiceAvailable(this)) {
         }
-        bp2 = new BillingProcessor(this, LICENSE_KEY, new BillingProcessor.IBillingHandler() {
+        bp = new BillingProcessor(this, LICENSE_KEY, new BillingProcessor.IBillingHandler() {
             @Override
             public void onBillingInitialized() {
                 try{
-                    bp2.loadOwnedPurchasesFromGoogle();
-                    Log.i("dsu", "isSubscriptionUpdateSupported : " + bp2.isSubscriptionUpdateSupported());
-                    Log.i("dsu", "getSubscriptionTransactionDetails : " + bp2.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID));
-                    Log.i("dsu", "isSubscribed : " + bp2.isSubscribed(SUBSCRIPTION19_ID));
-                    Log.i("dsu", "autoRenewing : " + bp2.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID).purchaseInfo.purchaseData.autoRenewing);
-                    Log.i("dsu", "purchaseTime : " + bp2.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID).purchaseInfo.purchaseData.purchaseTime);
-                    Log.i("dsu", "purchaseState : " + bp2.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID).purchaseInfo.purchaseData.purchaseState);
+                    bp.loadOwnedPurchasesFromGoogle();
+                    Log.i("dsu", "isSubscriptionUpdateSupported : " + bp.isSubscriptionUpdateSupported());
+                    Log.i("dsu", "getSubscriptionTransactionDetails : " + bp.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID_NOTINDIA));
+                    Log.i("dsu", "isSubscribed : " + bp.isSubscribed(SUBSCRIPTION19_ID_NOTINDIA));
+                    Log.i("dsu", "autoRenewing : " + bp.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID_NOTINDIA).purchaseInfo.purchaseData.autoRenewing);
+                    Log.i("dsu", "purchaseTime : " + bp.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID_NOTINDIA).purchaseInfo.purchaseData.purchaseTime);
+                    Log.i("dsu", "purchaseState : " + bp.getSubscriptionTransactionDetails(SUBSCRIPTION19_ID_NOTINDIA).purchaseInfo.purchaseData.purchaseState);
                 }catch (NullPointerException e){
                 }
             }
@@ -587,25 +595,39 @@ public class BrowserActivity extends Activity implements BrowserController, View
             @Override
             public void onPurchaseHistoryRestored() {
 //            	showToast("onPurchaseHistoryRestored");
-                for(String sku : bp2.listOwnedProducts()){
+                for(String sku : bp.listOwnedProducts()){
                     Log.i("dsu", "Owned Managed Product: " + sku);
 //                    showToast("Owned Managed Product: " + sku);
                 }
-                for(String sku : bp2.listOwnedSubscriptions()){
+                for(String sku : bp.listOwnedSubscriptions()){
                     Log.i("dsu", "Owned Subscription: " + sku);
 //                    showToast("Owned Subscription : " + sku);
                 }
             }
 
             @Override
-            public void onProductPurchased(String arg0, TransactionDetails arg1) {
+            public void onProductPurchased(String productId, TransactionDetails details) {
                 // TODO Auto-generated method stub
+                showToast("productId: " + productId);
+                Log.i("dsu", "\nproductId : " + productId + "\nTransactionDetails : " + details);
 
+
+                Log.i("dsu", "orderId : " + details.purchaseInfo.purchaseData.orderId);
+                Log.i("dsu", "autoRenewing : " + details.purchaseInfo.purchaseData.autoRenewing);
+                Log.i("dsu", "purchaseState : " + details.purchaseInfo.purchaseData.purchaseState);
+                Log.i("dsu", "productId : " + details.purchaseInfo.purchaseData.productId);
+                Log.i("dsu", "purchaseTime : " + details.purchaseInfo.purchaseData.purchaseTime);
+                Log.i("dsu", "developerPayload : " + details.purchaseInfo.purchaseData.developerPayload);
+                Log.i("dsu", "describeContents : " + details.purchaseInfo.purchaseData.describeContents());
             }
             @Override
             public void onBillingError(int arg0, Throwable arg1) {
             }
         });
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     @JavascriptInterface
@@ -616,17 +638,240 @@ public class BrowserActivity extends Activity implements BrowserController, View
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startActivity(intent);
     }
+    Handler handler = new Handler();
+    @JavascriptInterface
+    public void do_inapp(final String inapp_id, final String payment, final String order_number) {
+        Log.i("dsu,", "결제금액 : " + payment) ;
+        if(payment.equals("1")){
+            if(bp.isPurchased(INAPP_5_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_5_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_5_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_5_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_5_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_5_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }else if(payment.equals("2")){
+            if(bp.isPurchased(INAPP_8_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_8_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_8_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_8_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_8_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_8_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }else if(payment.equals("5")){
+            if(bp.isPurchased(INAPP_22_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_22_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_22_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_22_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_22_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_22_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }else if(payment.equals("10")){
+            if(bp.isPurchased(INAPP_50_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_50_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_50_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_50_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_50_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_50_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }else if(payment.equals("20")){
+            if(bp.isPurchased(INAPP_100_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_100_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_100_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_100_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_100_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_100_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }else if(payment.equals("40")){
+            if(bp.isPurchased(INAPP_200_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_200_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_200_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_200_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_200_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_200_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }else if(payment.equals("69")){
+            if(bp.isPurchased(INAPP_350_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_350_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_350_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_350_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_350_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_350_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }else if(payment.equals("99")){
+            if(bp.isPurchased(INAPP_500_ID_NOTINDIA)){
+                bp.consumePurchase(INAPP_500_ID_NOTINDIA);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        BrowserActivity.this.inapp_id = inapp_id;
+                        BrowserActivity.this.order_number = order_number;
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                        INAPP_ID = INAPP_500_ID_NOTINDIA;
+                        INAPP_TYPE = "INAPP";
+                        bp.purchase(BrowserActivity.this,INAPP_500_ID_NOTINDIA);
+                        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment + "\norder_number : " + order_number);
+                    }
+                },1500);
+            }else{
+                BrowserActivity.this.inapp_id = inapp_id;
+                BrowserActivity.this.order_number = order_number;
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+                PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+                INAPP_ID = INAPP_500_ID_NOTINDIA;
+                INAPP_TYPE = "INAPP";
+                bp.purchase(BrowserActivity.this,INAPP_500_ID_NOTINDIA);
+                Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id) + "\npayment : " + payment+ "\norder_number : " + order_number);
+            }
+        }
+    }
 
     @JavascriptInterface
-    public void do_subscribe(String id, String payment) {
-        order_id = id;
-        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, order_id);
-//        if (payment.equals("19900")){
-            bp2.subscribe(BrowserActivity.this,SUBSCRIPTION19_ID);
-            SUBSCRIPTION_TYPE = SUBSCRIPTION19_ID;
-//        }
+    public void do_subscribe(String inapp_id, String payment, String order_number) {
+        Log.i("dsu,", "결제금액 : " + payment) ;
 
-        Log.i("dsu,", "id : " + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, order_id) + "\npayment : " + payment);
+        BrowserActivity.this.inapp_id = inapp_id;
+        PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_INAPP_ID, inapp_id);
+        if (payment.equals("10")){
+            BrowserActivity.this.order_number = order_number;
+            PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+            SUBSCRIPTION_ID = SUBSCRIPTION19_ID_NOTINDIA;
+            INAPP_TYPE = "SUBSCRIPTION";
+            bp.subscribe(BrowserActivity.this,SUBSCRIPTION19_ID_NOTINDIA);
+        }else{
+            BrowserActivity.this.order_number = order_number;
+            PreferenceUtil.setStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, order_number);
+            SUBSCRIPTION_ID = SUBSCRIPTION19_ID;
+            INAPP_TYPE = "SUBSCRIPTION";
+            bp.subscribe(BrowserActivity.this,SUBSCRIPTION19_ID);
+        }
     }
 
     @JavascriptInterface
@@ -651,51 +896,102 @@ public class BrowserActivity extends Activity implements BrowserController, View
         bld.create().show();
     }
 
+    IInAppBillingService mService;
+    String INAPP_ID;
+    String INAPP_TYPE = "";
+    public String INAPP_5_ID = "fun.comics.coin5.inapp";
+    public String INAPP_8_ID = "fun.comics.coin8.inapp";
+    public String INAPP_22_ID = "fun.comics.coin22.inapp";
+    public String INAPP_50_ID = "fun.comics.coin50.inapp";
+    public String INAPP_100_ID = "fun.comics.coin100.inapp";
+    public String INAPP_200_ID = "fun.comics.coin200.inapp";
+    public String INAPP_350_ID = "fun.comics.coin350.inapp";
+    public String INAPP_500_ID = "fun.comics.coin500.inapp";
+
+    public String INAPP_5_ID_NOTINDIA = "fun.comics.coin5.inapp.notindia";
+    public String INAPP_8_ID_NOTINDIA = "fun.comics.coin8.inapp.notindia";
+    public String INAPP_22_ID_NOTINDIA = "fun.comics.coin22.inapp.notindia";
+    public String INAPP_50_ID_NOTINDIA = "fun.comics.coin50.inapp.notindia";
+    public String INAPP_100_ID_NOTINDIA = "fun.comics.coin100.inapp.notindia";
+    public String INAPP_200_ID_NOTINDIA = "fun.comics.coin200.inapp.notindia";
+    public String INAPP_350_ID_NOTINDIA = "fun.comics.coin350.inapp.notindia";
+    public String INAPP_500_ID_NOTINDIA = "fun.comics.coin500.inapp.notindia";
+
+    ServiceConnection mServiceConn = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+        }
+        @Override
+        public void onServiceConnected(ComponentName name,IBinder service) {
+            mService = IInAppBillingService.Stub.asInterface(service);
+        }
+    };
+
+    private void bind_service(){
+        Intent serviceIntent =
+                new Intent("com.android.vending.billing.InAppBillingService.BIND");
+        serviceIntent.setPackage("com.android.vending");
+        bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 //        filePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, intent));
-        if (!bp2.handleActivityResult(requestCode, resultCode, intent))
+        if (!bp.handleActivityResult(requestCode, resultCode, intent))
             Log.i("dsu", "인앱결제 requestCode : " + requestCode);
         if (requestCode == 32459) {
+            Log.i("dsu", "32459=====>");
             int responseCode = intent.getIntExtra("RESPONSE_CODE", 0);
             String purchaseData = intent.getStringExtra("INAPP_PURCHASE_DATA");
             String dataSignature = intent.getStringExtra("INAPP_DATA_SIGNATURE");//this is the signature which you want
             Log.i("dsu", "purchaseData : " +  purchaseData);
             if (resultCode == RESULT_OK) {
                 try {
-                    JSONObject jo = new JSONObject(purchaseData);//this is the JSONObject which you have included in Your Question right now
-                    String orderId = jo.getString("orderId");
-                    String packageName = jo.getString("packageName");
-                    String productId = jo.getString("productId");
-                    String purchaseTime = jo.getString("purchaseTime");
-                    String purchaseState = jo.getString("purchaseState");
-                    String purchaseToken = jo.getString("purchaseToken");
-                    String autoRenewing = jo.getString("autoRenewing");
-                    String format_purchaseTime = MillToDate(Long.parseLong(purchaseTime));
-                    Log.i("dsu", "구글주문아이디 " +  orderId + "\n어플리케이션 패키지이름 : " + packageName + "\n아이템 상품 식별자 : " + orderId + "\n상품 구매가 이루어진 시간 : " + format_purchaseTime + "\n주문의 구매 상태 : " + purchaseState + "\n구매를 고유하게 식별하는 토큰값 : " + purchaseToken + "\n자동갱신여부 : " + autoRenewing);
+                    if(INAPP_TYPE.equals("INAPP")){
+                        JSONObject jo = new JSONObject(purchaseData);//this is the JSONObject which you have included in Your Question right now
+                        String orderId = jo.getString("orderId");
+                        String packageName = jo.getString("packageName");
+                        String productId = jo.getString("productId");
+                        String purchaseTime = jo.getString("purchaseTime");
+                        String purchaseState = jo.getString("purchaseState");
+                        String developerPayload = jo.getString("developerPayload");
+                        String purchaseToken = jo.getString("purchaseToken");
 
+                        ninjaWebView = new NinjaWebView(this);
+                        ninjaWebView.setBrowserController(this);
+                        ninjaWebView.setFlag(BrowserUnit.FLAG_NINJA);
+                        ninjaWebView.setAlbumTitle(getString(R.string.album_untitled));
+                        ViewUnit.bound(this, ninjaWebView);
+                        int index = switcherContainer.indexOfChild(currentAlbumController.getAlbumView());
+                        currentAlbumController.deactivate();
+                        switcherContainer.removeView(currentAlbumController.getAlbumView());
+                        contentFrame.removeAllViews(); ///
+                        switcherContainer.addView(ninjaWebView.getAlbumView(), index, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                        contentFrame.addView(ninjaWebView);
+                        BrowserContainer.set(ninjaWebView, index);
+                        currentAlbumController = ninjaWebView;
+                        ninjaWebView.activate();
+                        ninjaWebView.addJavascriptInterface(this, "android_wowcomics");
+                        String userAgent = ninjaWebView.getSettings().getUserAgentString();
+                        ninjaWebView.getSettings().setUserAgentString(userAgent+" app");
+                        ninjaWebView.loadUrl("http://119.207.78.175:8080/google/google_success2.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&PRODUCT_ID=" + productId);
+                        Log.i("dsu", "일반결제 URL이동===>"+ "http://119.207.78.175:8080/google/google_success2.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&PRODUCT_ID=" + productId);
+                    }else{
+                        JSONObject jo = new JSONObject(purchaseData);//this is the JSONObject which you have included in Your Question right now
+                        String orderId = jo.getString("orderId");
+                        String packageName = jo.getString("packageName");
+                        String productId = jo.getString("productId");
+                        String purchaseTime = jo.getString("purchaseTime");
+                        String purchaseState = jo.getString("purchaseState");
+                        String purchaseToken = jo.getString("purchaseToken");
+                        String autoRenewing = jo.getString("autoRenewing");
+                        String format_purchaseTime = MillToDate(Long.parseLong(purchaseTime));
 
-
-
-                    ninjaWebView = new NinjaWebView(this);
-                    ninjaWebView.setBrowserController(this);
-                    ninjaWebView.setFlag(BrowserUnit.FLAG_NINJA);
-                    ninjaWebView.setAlbumTitle(getString(R.string.album_untitled));
-                    ViewUnit.bound(this, ninjaWebView);
-                    int index = switcherContainer.indexOfChild(currentAlbumController.getAlbumView());
-                    currentAlbumController.deactivate();
-                    switcherContainer.removeView(currentAlbumController.getAlbumView());
-                    contentFrame.removeAllViews(); ///
-                    switcherContainer.addView(ninjaWebView.getAlbumView(), index, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    contentFrame.addView(ninjaWebView);
-                    BrowserContainer.set(ninjaWebView, index);
-                    currentAlbumController = ninjaWebView;
-                    ninjaWebView.activate();
-                    ninjaWebView.addJavascriptInterface(this, "android_wowcomics");
-                    String userAgent = ninjaWebView.getSettings().getUserAgentString();
-                    ninjaWebView.getSettings().setUserAgentString(userAgent+" app");
-                    ninjaWebView.loadUrl("http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, orderId) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + SUBSCRIPTION_TYPE);
-                    Log.i("dsu", "구독완료후 URL이동===>"+ "http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_ID, orderId) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + SUBSCRIPTION_TYPE);
+                        ninjaWebView.loadUrl("http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + productId);
+                        Log.i("dsu", "구독완료후 URL이동===>"+ "http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + productId);
+                        Log.i("dsu", "구글주문아이디 " +  orderId + "\n어플리케이션 패키지이름 : " + packageName + "\n아이템 상품 식별자 : " + orderId + "\n상품 구매가 이루어진 시간 : " + format_purchaseTime + "\n주문의 구매 상태 : " + purchaseState + "\n구매를 고유하게 식별하는 토큰값 : " + purchaseToken + "\n자동갱신여부 : " + autoRenewing);
+                    }
                 }
                 catch (JSONException e) {
                     alert("Failed to parse purchase data.");
@@ -769,6 +1065,9 @@ public class BrowserActivity extends Activity implements BrowserController, View
 
     @Override
     public void onDestroy() {
+        if (mService != null) {
+            unbindService(mServiceConn);
+        }
         alert_view = false;
 
         boolean clearIndexedDB = sp.getBoolean(("sp_clearIndexedDB"), false);

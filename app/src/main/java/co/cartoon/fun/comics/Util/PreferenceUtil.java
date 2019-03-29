@@ -10,7 +10,8 @@ public class PreferenceUtil {
 
 	private static final String SHARED_FILE_TITLE = "pref_wow";
     public final static String PREF_REWARD_PARAM = "pref_reward_param";
-	public final static String PREF_ORDER_ID = "order_id";
+	public final static String PREF_INAPP_ID = "inapp_id";
+    public final static String PREF_ORDER_NUMBER = "order_number";
 	public final static String PREF_PRODUCT_ID = "product_id";
     public final static String PREF_DO_REWARD = "pref_do_reward";
 
