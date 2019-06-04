@@ -228,7 +228,7 @@ public class BrowserActivity extends Activity implements BrowserController, View
     // Others
 
     private String title;
-    private String url = "http://119.207.78.175:8080";
+    private String url = "http://www.limbercomics.com";
     private int hide_toolbar;
     private BroadcastReceiver downloadReceiver;
 
@@ -632,7 +632,7 @@ public class BrowserActivity extends Activity implements BrowserController, View
 
     @JavascriptInterface
     public void do_webpage(String T_Md5, String sessionId) {
-        String url ="http://119.207.78.175:8080?code="+T_Md5+"&sessionId="+sessionId+"";
+        String url = this.url + "?code="+T_Md5+"&sessionId="+sessionId+"";
         Log.i("dsu", "url : " + url);
         Log.i("dsu,", "T_Md5 : " + T_Md5 + "\nsessionId : " + sessionId );
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -975,8 +975,8 @@ public class BrowserActivity extends Activity implements BrowserController, View
                         ninjaWebView.addJavascriptInterface(this, "android_wowcomics");
                         String userAgent = ninjaWebView.getSettings().getUserAgentString();
                         ninjaWebView.getSettings().setUserAgentString(userAgent+" app");
-                        ninjaWebView.loadUrl("http://119.207.78.175:8080/google/google_success2.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&PRODUCT_ID=" + productId);
-                        Log.i("dsu", "일반결제 URL이동===>"+ "http://119.207.78.175:8080/google/google_success2.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&PRODUCT_ID=" + productId);
+                        ninjaWebView.loadUrl(url + "/google/google_success2.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&PRODUCT_ID=" + productId);
+                        Log.i("dsu", "일반결제 URL이동===>"+ url + "/google/google_success2.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&PRODUCT_ID=" + productId);
                     }else{
                         JSONObject jo = new JSONObject(purchaseData);//this is the JSONObject which you have included in Your Question right now
                         String orderId = jo.getString("orderId");
@@ -988,8 +988,8 @@ public class BrowserActivity extends Activity implements BrowserController, View
                         String autoRenewing = jo.getString("autoRenewing");
                         String format_purchaseTime = MillToDate(Long.parseLong(purchaseTime));
 
-                        ninjaWebView.loadUrl("http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + productId);
-                        Log.i("dsu", "구독완료후 URL이동===>"+ "http://119.207.78.175:8080/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + productId);
+                        ninjaWebView.loadUrl(url + "/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + productId);
+                        Log.i("dsu", "구독완료후 URL이동===>"+ url + "/google/google_success.asp?ORDER_ID=" + PreferenceUtil.getStringSharedData(context, PreferenceUtil.PREF_ORDER_NUMBER, BrowserActivity.this.order_number) + "&INAPP_ORDERID=" + orderId + "&INAPP_TNO=" + purchaseToken + "&PRODUCT_ID=" + productId);
                         Log.i("dsu", "구글주문아이디 " +  orderId + "\n어플리케이션 패키지이름 : " + packageName + "\n아이템 상품 식별자 : " + orderId + "\n상품 구매가 이루어진 시간 : " + format_purchaseTime + "\n주문의 구매 상태 : " + purchaseState + "\n구매를 고유하게 식별하는 토큰값 : " + purchaseToken + "\n자동갱신여부 : " + autoRenewing);
                     }
                 }
