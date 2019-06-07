@@ -38,6 +38,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NotificationCompat;
@@ -83,6 +84,8 @@ import android.widget.VideoView;
 import com.android.vending.billing.IInAppBillingService;
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.mobapphome.mahencryptorlib.MAHEncryptor;
 
@@ -244,7 +247,7 @@ public class BrowserActivity extends Activity implements BrowserController, View
     private AdBlock getAdBlock() {
         return adBlock;
     }
-    private Context context;
+    public static Context context;
     private static final float[] NEGATIVE_COLOR = {
             -1.0f, 0, 0, 0, 255, // Red
             0, -1.0f, 0, 0, 255, // Green
@@ -475,7 +478,12 @@ public class BrowserActivity extends Activity implements BrowserController, View
         registerReceiver(downloadReceiver, filter);
         fcm_token = get_fcm_token();
         load_url();
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            co.cartoon.fun.comics.Util.NotificationManager.sendNotification(BrowserActivity.context, 3, co.cartoon.fun.comics.Util.NotificationManager.Channel.NOTICE, "Notice title", "Notice body");
+//        }
     }
+
+
     @SuppressLint("WrongConstant")
     private void sendNotification_bic_picture(String title, String message, String url){
         try{

@@ -13,13 +13,16 @@
     <uses-permission android:name="com.android.vending.BILLING" />
 
     <!-- Application -->
-    <application android:label="@string/app_name"
-                 android:icon="@mipmap/ic_launcher"
-                 android:allowBackup="true"
-                 android:enabled="true"
-                 android:largeHeap="true"
-                 android:supportsRtl="false"
-                 android:fullBackupContent="@xml/backup_descriptor">
+    <application
+                android:name="co.cartoon.fun.comics.Activity.MyApp"
+                android:allowBackup="true"
+                android:icon="@mipmap/ic_launcher"
+                android:label="@string/app_name"
+                android:supportsRtl="true"
+                android:launchMode="singleTop"
+                android:hardwareAccelerated="false"
+                android:theme="@style/AppTheme"
+                android:largeHeap="true">
 
         <activity
             android:screenOrientation="sensorPortrait"

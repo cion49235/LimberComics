@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -50,20 +51,45 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getData().size() > 0) {
             //Log.d(TAG, "Message data payload: " + remoteMessage.getData());
 
-            /****** 서버에서 전송한 데이터를 추출한다 *********/
+
             String title = remoteMessage.getData().get("title");
             String message = remoteMessage.getData().get("message");
             String url = remoteMessage.getData().get("url");
-
+            Log.i("dsu", "title : " + title);
+            Log.i("dsu", "message : " + message);
+            Log.i("dsu", "url : " + url);
             // 상태바 영역에 공지 등록 요청 --> 파라미터는 상황에 따라 수정해야 함.
 //            sendNotification(title, message, url);
-            sendNotification_bic_picture(title, message, url);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Log.i("dsu", "오레오보다 큼 OS.ver : " + Build.VERSION.SDK_INT);
+                Log.i("dsu", "title : " + title);
+                Log.i("dsu", "message : " + message);
+                co.cartoon.fun.comics.Util.NotificationManager.sendNotification(3, co.cartoon.fun.comics.Util.NotificationManager.Channel.NOTICE, title, message);
+            }else{
+                Log.i("dsu", "오레오보다 작음 OS.ver : " + Build.VERSION.SDK_INT);
+                Log.i("dsu", "title : " + title);
+                Log.i("dsu", "message : " + message);
+                sendNotification_bic_picture(title, message,"");
+            }
         }
 
         // Check if message contains a notification payload.
-        if (remoteMessage.getNotification() != null) {
-            Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
-        }
+       /* if (remoteMessage.getNotification() != null) {
+            String title = remoteMessage.getNotification().getTitle();
+            String message = remoteMessage.getNotification().getBody();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Log.i("dsu", "오레오보다 큼 OS.ver : " + Build.VERSION.SDK_INT);
+                Log.i("dsu", "title : " + title);
+                Log.i("dsu", "message : " + message);
+                co.cartoon.fun.comics.Util.NotificationManager.sendNotification(3, co.cartoon.fun.comics.Util.NotificationManager.Channel.NOTICE, title, message);
+            }else{
+                Log.i("dsu", "오레오보다 작음 OS.ver : " + Build.VERSION.SDK_INT);
+                Log.i("dsu", "title : " + title);
+                Log.i("dsu", "message : " + message);
+                sendNotification_bic_picture(title, message,"");
+            }
+        }*/
 
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated. See sendNotification method below.
@@ -118,8 +144,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             Intent intent = new Intent(this, IntroActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             Notification.Builder builder = new Notification.Builder(this);
-            builder.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.drawable.ic_push));
-            builder.setSmallIcon(R.drawable.ic_push);
+            builder.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher));
+            builder.setSmallIcon(R.mipmap.ic_launcher);
             builder.setTicker(getString(R.string.activity_quizready_live_survival28));
             builder.setContentTitle(title);
             builder.setContentText(message);
